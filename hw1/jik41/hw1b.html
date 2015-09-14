@@ -1,0 +1,137 @@
+<html>	
+	<head>		
+		<title>Bar Chart</title>		
+		<script src="http://d3js.org/d3.v3.min.js"></script>	
+		<style>
+
+			.container{
+				width: 1000px;
+				margin: 0 auto;
+			}
+			.bar {
+				fill: lightgrey;
+				opacity: 0.7;
+			}
+
+			.bar:hover {
+				fill: grey;
+				opacity: 0.7;
+			}
+
+			.axis {
+				font: 12px sans-serif;
+			}
+
+			.axis path,
+			.axis line {
+				fill: none;
+				stroke: #000;
+				shape-rendering: crispEdges;
+			}
+
+			.x.axis path {
+				display: none;
+			}
+			
+			.chartTitle {
+				font: 20px sans-serif;
+			}
+							
+
+		</style>		
+		<script>
+		
+		function barChart() {
+			genBarChart(2013);
+			genBarChart(2010);
+			genBarChart(2007);
+		}
+		
+		function genBarChart(year){
+		
+			var margin = {top: 50, right: 20, bottom: 100, left: 40},
+				width = 1000 - margin.left - margin.right,
+				height = 380 - margin.top - margin.bottom;
+				
+			//https://github.com/mbostock/d3/wiki/Ordinal-Scales#ordinal_rangeRoundBands	
+			var x = d3.scale.ordinal()
+				.rangeRoundBands([0, width], .2);
+			//https://github.com/mbostock/d3/wiki/Quantitative-Scales#linear_range
+			var y = d3.scale.linear()
+				.range([height,0]);
+			
+			//https://github.com/mbostock/d3/wiki/SVG-Axes#_axis
+			var xAxis = d3.svg.axis()
+				.scale(x)
+				.orient("bottom");
+				
+			//https://github.com/mbostock/d3/wiki/SVG-Axes#_axis
+			var yAxis = d3.svg.axis()
+				.scale(y)
+				.orient("left")
+				.ticks(10, "%");
+		
+			var svg = d3.select("div#barChart"+ year.toString()).append("svg")
+			.attr("width", width + margin.left + margin.right)
+			.attr("height", height + margin.top + margin.bottom)
+			.append("g")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+		
+			d3.tsv("d2_" + year.toString() + ".tsv", type, function(error, data) {
+			console.log(data);
+			x.domain(data.map(function(d) { return d.state; }));
+			y.domain([0, d3.max(data, function(d) { return d.percent; })]);
+			
+			svg.append("g")
+				.attr("class", "x axis")
+				.attr("transform", "translate(0," + height + ")")
+				.call(xAxis)
+				.selectAll("text")  
+					.style("text-anchor", "end")
+					.attr("dx", "-.8em")
+					.attr("dy", ".15em")
+					.attr("transform", "rotate(-65)" );
+
+			svg.append("g")
+				.attr("class", "y axis")
+				.call(yAxis)
+				.append("text")
+					.attr("transform", "rotate(-90)")
+					.attr("x", 10)
+					.attr("y", 5)
+					.attr("dy", ".70em")
+					.style("text-anchor", "end")
+					.text("Percentage");
+					
+			svg.append("text")
+				.attr("x", (width / 2))             
+				.attr("y", 0 - (margin.top / 2))
+				.attr("text-anchor", "middle")  
+				.attr("class", "chartTitle")
+				.text("The United Stats Poverty Rate across States(" + year.toString() + ")");
+
+			svg.selectAll(".bar").data(data).enter()
+				.append("rect")
+				.attr("class", "bar")
+				.attr("x", function(d) { return x(d.state); })
+				.attr("width", x.rangeBand())
+				.attr("y", function(d) { return y(d.percent); })
+				.attr("height", function(d) { return height - y(d.percent); })
+				.append("title").text(function(d) { return (d.percent*100.00).toString().match(/^\d+(?:\.\d{0,2})?/) + "%"; });
+			
+			});
+		
+		}
+		
+		function type(d) {
+			d.percent =+ d.percent;
+			return d;
+		}
+		</script>		
+	</head>		
+	<body onload="barChart()">
+		<div id="barChart2013" class = "container"></div> 
+		<div id="barChart2010" class = "container"></div> 
+		<div id="barChart2007" class = "container"></div> 
+	</body>
+</html>
