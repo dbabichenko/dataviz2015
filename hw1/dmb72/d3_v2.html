@@ -1,0 +1,174 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <link type="text/css" rel="stylesheet" href="css/style.css"/>
+    <style type="text/css">
+		body{
+
+		}
+		
+		#states path {
+		  fill: #ccc;
+		  stroke: #fff;
+		}
+		
+		path.arc {
+		  pointer-events: none;
+		  fill: none;
+		  stroke: #000;
+		  display: none;
+		}
+		
+		path.cell {
+		  fill: none;
+		  pointer-events: all;
+		}
+		
+		circle {
+		  fill: steelblue;
+		  fill-opacity: .8;
+		  stroke: #fff;
+		}
+		
+		#controls{
+			position: absolute;
+			top: 0px;
+			left: 680px;
+			z-index: 1;
+			background-color: #c0c0c0;
+			opacity: 0.7;
+			padding: 0px 10px 0px 10px;
+			border-radius: 10px;
+			border: 1px solid #000000;
+		}
+		
+		#sliderYear{
+			width: 200px;
+		}
+    </style>
+</head>
+<body>
+	<div id="controls">
+		<input type="range" min="2002" max="2013" step="1" value="2002" onchange="change(this);" id="sliderYear" list="steplist" />
+		<datalist id="steplist">
+		    <option>2002</option>
+		    <option>2003</option>
+		    <option>2004</option>
+		    <option>2005</option>
+		    <option>2006</option>
+		    <option>2007</option>
+		    <option>2008</option>
+		    <option>2009</option>
+		    <option>2010</option>
+		    <option>2011</option>
+		    <option>2012</option>
+		    <option>2013</option>
+		</datalist>
+	</div>
+	<script type="text/javascript" src="js/jquery-1.11.3.min.js"></script>
+	<script type="text/javascript" src="js/d3.js"></script>
+	<script type="text/javascript" src="js/d3.csv.js"></script>
+	<script type="text/javascript" src="js/d3.geo.js"></script>
+	<script type="text/javascript" src="js/d3.geom.js"></script>
+	<script type="text/javascript">
+		// http://mbostock.github.io/d3/talk/20111116/airports.html
+
+		var w = 1280,
+		    h = 800;
+		
+		var projection = d3.geo.azimuthal()
+		    .mode("equidistant")
+		    .origin([-98, 38])
+		    .scale(1400)
+		    .translate([640, 360]);
+		
+		var path = d3.geo.path()
+		    .projection(projection);
+		
+		var svg = d3.select("body").insert("svg:svg", "h2")
+		    .attr("width", w)
+		    .attr("height", h);
+		    
+		
+		
+		var states = svg.append("svg:g")
+		    .attr("id", "states");
+		
+		var circles = svg.append("svg:g")
+		    .attr("id", "circles");
+		
+		var cells = svg.append("svg:g")
+		    .attr("id", "cells");
+		
+		var povertyDataByState = null;
+		var povertyDataByRace = null;
+		
+		
+		
+		d3.json("data/us-states.json", function(collection) {
+			states.selectAll("path")
+			.data(collection.features)
+			.enter().append("svg:path")
+			.attr("d", path)
+			.attr("opacity", 0.1)
+			.on("mouseover", function(d) { 
+			    console.log("HERE");
+			        
+			});
+			
+			
+		});
+		
+		
+		d3.csv("data/hstpov21.csv", function(povertyData) {
+		    var g = cells.selectAll("g")
+		        .data(povertyData)
+				.enter().append("svg:g")
+				
+				
+			povertyDataByState = povertyData;
+			
+			
+			// drawPovertyByState(2013);
+			
+			
+			// createSlider();
+		});
+		
+		var drawPovertyByState = function(yearToDisplay){
+			states.selectAll("path")
+		        .data(povertyDataByState)
+		        .on("mouseover", function(d) { 
+			        console.log(d.State + ": " + d[yearToDisplay]); 
+			        console.log("opacity: " + d[yearToDisplay + "_percent"] / 100);
+			        
+			    })
+			    .transition()
+				.delay(100)
+				.duration(1500)
+				.attr("opacity", 1);
+		}
+
+		var clearPovertyByState = function(){
+			circles.selectAll("circle")
+				.remove("svg:circle");
+		}
+		
+		var createSlider = function(){
+			var slider = d3.select("body").insert("input")
+		    .attr("width", w)
+		    .attr("height", h)
+		    .attr("type", "range");
+		}
+		
+
+			
+		var change = function(obj){
+			clearPovertyByState();
+			drawPovertyByState(obj.value);
+			
+		}
+	</script>
+</body>
+</html>
